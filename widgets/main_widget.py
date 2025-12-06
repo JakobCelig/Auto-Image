@@ -1,21 +1,37 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt5.QtWidgets import (
+    QWidget, QHBoxLayout, QVBoxLayout, QLabel,
+    QSplitter, QSizePolicy
+)
+from PyQt5.QtCore import Qt
+
+from widgets.settings_widget import SettingsWidget
+from widgets.viewer_widget import ViewerWidget
+from widgets.thumbs_widget import ThumbsWidget
 
 
 class MainWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Auto Image")
 
-        # --- Layout ---
-        layout = QVBoxLayout()
+        self.setWindowTitle("AutoImage")
+        self.setMinimumSize(1200, 700)
 
-        # Buttons and status
-        self.load_button = QPushButton("Load Images")
-        self.crop_button = QPushButton("Crop Images")
-        self.status_label = QLabel("Ready.")
+        main_layout = QHBoxLayout(self)
+        splitter = QSplitter(Qt.Horizontal)
 
-        layout.addWidget(self.load_button)
-        layout.addWidget(self.crop_button)
-        layout.addWidget(self.status_label)
+        # LEFT PANEL – settings
+        self.settings_panel = SettingsWidget()
+        splitter.addWidget(self.settings_panel)
 
-        self.setLayout(layout)
+        # CENTER PANEL – drag and drop viewer
+        self.viewer_panel = ViewerWidget()
+        splitter.addWidget(self.viewer_panel)
+
+        # RIGHT PANEL – thumbnails
+        self.thumbs_panel = ThumbsWidget()
+        splitter.addWidget(self.thumbs_panel)
+
+        # Default sizes
+        splitter.setSizes([250, 700, 300])
+
+        main_layout.addWidget(splitter)
