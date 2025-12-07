@@ -1,37 +1,74 @@
 from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QLabel,
-    QSplitter, QSizePolicy
+    QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
+    QFrame, QLabel
 )
 from PyQt5.QtCore import Qt
 
-from widgets.settings_widget import SettingsWidget
-from widgets.viewer_widget import ViewerWidget
-from widgets.thumbs_widget import ThumbsWidget
 
-
-class MainWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-
+class MainWidget(QMainWindow):
+    def __init__(self, settings_widget: QWidget,
+                 viewer_widget: QWidget,
+                 thumbs_widget: QWidget,
+                 parent=None):
+        super().__init__(parent)
         self.setWindowTitle("AutoImage")
-        self.setMinimumSize(1200, 700)
 
-        main_layout = QHBoxLayout(self)
-        splitter = QSplitter(Qt.Horizontal)
+        # ---- Central container ----
+        central = QWidget(self)
+        self.setCentralWidget(central)
 
-        # LEFT PANEL – settings
-        self.settings_panel = SettingsWidget()
-        splitter.addWidget(self.settings_panel)
+        root_layout = QHBoxLayout(central)
+        root_layout.setContentsMargins(8, 8, 8, 8)
+        root_layout.setSpacing(8)
 
-        # CENTER PANEL – drag and drop viewer
-        self.viewer_panel = ViewerWidget()
-        splitter.addWidget(self.viewer_panel)
+        # -------- LEFT: Settings panel --------
+        left_frame = QFrame()
+        left_frame.setObjectName("settingsPanel")
+        left_frame.setFrameShape(QFrame.NoFrame)
+        left_frame.setMinimumWidth(220)
+        left_frame.setMaximumWidth(260)
 
-        # RIGHT PANEL – thumbnails
-        self.thumbs_panel = ThumbsWidget()
-        splitter.addWidget(self.thumbs_panel)
+        left_layout = QVBoxLayout(left_frame)
+        left_layout.setContentsMargins(12, 12, 12, 12)
+        left_layout.setSpacing(12)
 
-        # Default sizes
-        splitter.setSizes([250, 700, 300])
+        left_title = QLabel("Settings Window")
+        left_title.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        left_title.setObjectName("panelTitle")
 
-        main_layout.addWidget(splitter)
+        left_layout.addWidget(left_title)
+        left_layout.addWidget(settings_widget, stretch=1)
+
+        # -------- CENTER: Viewer panel --------
+        center_frame = QFrame()
+        center_frame.setObjectName("viewerPanel")
+        center_frame.setFrameShape(QFrame.NoFrame)
+
+        center_layout = QVBoxLayout(center_frame)
+        center_layout.setContentsMargins(12, 12, 12, 12)
+        center_layout.setSpacing(8)
+
+        center_layout.addWidget(viewer_widget, stretch=1)
+
+        # -------- RIGHT: Thumbnails panel --------
+        right_frame = QFrame()
+        right_frame.setObjectName("thumbsPanel")
+        right_frame.setFrameShape(QFrame.NoFrame)
+        right_frame.setMinimumWidth(280)
+        right_frame.setMaximumWidth(340)
+
+        right_layout = QVBoxLayout(right_frame)
+        right_layout.setContentsMargins(12, 12, 12, 12)
+        right_layout.setSpacing(8)
+
+        right_title = QLabel("All Uploaded Images")
+        right_title.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        right_title.setObjectName("panelTitle")
+
+        right_layout.addWidget(right_title)
+        right_layout.addWidget(thumbs_widget, stretch=1)
+
+        # -------- Add to root layout --------
+        root_layout.addWidget(left_frame, stretch=0)
+        root_layout.addWidget(center_frame, stretch=1)
+        root_layout.addWidget(right_frame, stretch=0)
