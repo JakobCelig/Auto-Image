@@ -42,40 +42,108 @@ def main():
         border-radius: 14px;
     }
 
-    QLabel#thumbLabel {
+    QFrame#thumbItem {
         background-color: #0F141B;
         border: 1px solid #273241;
         border-radius: 10px;
     }
 
-    QLabel#thumbLabel:hover {
+    QFrame#thumbItem:hover {
         border-color: #3B485C;
     }
 
-    QToolButton#thumbsToggle {
-        background-color: #1B2430;
-        border: 1px solid #2B3745;
-        border-radius: 10px;
-        padding: 6px 12px;
-        color: #CDD6E0;
+    QFrame#thumbItem[selected="true"] {
+        border: 2px solid #5C6BC0;
     }
 
-    QToolButton#thumbsToggle:checked {
-        background-color: #2B6CB0;
-        border-color: #2B6CB0;
-        color: #F8FAFC;
+    QLabel#thumbName {
+        color: #8C97A5;
+        font-size: 11px;
+    }
+
+    QLabel#thumbsModeLabel {
+        color: #CDD6E0;
+        font-size: 12px;
+    }
+
+    QLabel#thumbsModeLabel:disabled {
+        color: #6E7A8B;
     }
 
     QPushButton#convertButton {
-        background-color: #1D8A7A;
-        border-radius: 12px;
-        padding: 10px;
+        background-color: #5C6BC0;
+        border: 1px solid #5C6BC0;
+        border-radius: 10px;
+        padding: 8px 12px;
         font-weight: 600;
         color: #F8FAFC;
     }
 
     QPushButton#convertButton:hover {
-        background-color: #21A693;
+        background-color: #6F7EDD;
+        border-color: #6F7EDD;
+    }
+
+    QPushButton#removeButton {
+        background-color: transparent;
+        border: 1px solid #4C5AA6;
+        border-radius: 10px;
+        padding: 8px 12px;
+        color: #BFC6F8;
+    }
+
+    QPushButton#removeButton:hover {
+        background-color: #242C4E;
+        border-color: #5C6BC0;
+    }
+
+    QLabel#outputPath {
+        color: #B8C1CC;
+        padding: 6px 8px;
+        border: 1px solid #2B3745;
+        border-radius: 8px;
+        background-color: #0F141B;
+    }
+
+    QToolButton#outputBrowse {
+        background-color: #1B2430;
+        border: 1px solid #2B3745;
+        border-radius: 10px;
+        padding: 6px 10px;
+        color: #CDD6E0;
+    }
+
+    QProgressBar#convertProgress {
+        border: 1px solid #2B3745;
+        border-radius: 12px;
+        background-color: #0F141B;
+        text-align: center;
+        color: #F8FAFC;
+        height: 38px;
+    }
+
+    QProgressBar#convertProgress::chunk {
+        background-color: #2B6CB0;
+        border-radius: 12px;
+    }
+
+    QStatusBar#mainStatus {
+        background-color: #0E131A;
+        color: #9AA4B2;
+    }
+
+    QProgressBar#uploadProgress {
+        border: 1px solid #2B3745;
+        border-radius: 10px;
+        background-color: #11161E;
+        text-align: center;
+        color: #F8FAFC;
+        height: 18px;
+    }
+
+    QProgressBar#uploadProgress::chunk {
+        background-color: #1D8A7A;
+        border-radius: 10px;
     }
     """
 

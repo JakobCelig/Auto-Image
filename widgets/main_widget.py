@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QFrame,
     QLabel,
     QSplitter,
+    QProgressBar,
 )
 from PyQt5.QtCore import Qt
 
@@ -60,7 +61,7 @@ class MainWidget(QMainWindow):
         right_frame.setObjectName("thumbsPanel")
         right_frame.setFrameShape(QFrame.NoFrame)
         right_frame.setMinimumWidth(280)
-        right_frame.setMaximumWidth(420)
+        right_frame.setMaximumWidth(720)
 
         right_layout = QVBoxLayout(right_frame)
         right_layout.setContentsMargins(12, 12, 12, 12)
@@ -76,6 +77,34 @@ class MainWidget(QMainWindow):
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 0)
-        splitter.setSizes([280, 900, 340])
+        splitter.setSizes([280, 860, 420])
 
         root_layout.addWidget(splitter, stretch=1)
+
+        # -------- Status bar (upload progress) --------
+        status = self.statusBar()
+        status.setObjectName("mainStatus")
+        self.upload_progress = QProgressBar()
+        self.upload_progress.setObjectName("uploadProgress")
+        self.upload_progress.setVisible(False)
+        self.upload_progress.setFixedWidth(220)
+        self.upload_progress.setTextVisible(True)
+        self.upload_progress.setAlignment(Qt.AlignCenter)
+        status.addPermanentWidget(self.upload_progress)
+
+    def start_upload_progress(self, total: int):
+        total = max(1, total)
+        self.upload_progress.setRange(0, total)
+        self.upload_progress.setValue(0)
+        self.upload_progress.setFormat("Uploading... %p%")
+        self.upload_progress.setVisible(True)
+        self.statusBar().showMessage("Uploading images...")
+
+    def update_upload_progress(self, value: int, total: int):
+        total = max(1, total)
+        self.upload_progress.setRange(0, total)
+        self.upload_progress.setValue(value)
+
+    def finish_upload_progress(self):
+        self.upload_progress.setVisible(False)
+        self.statusBar().clearMessage()

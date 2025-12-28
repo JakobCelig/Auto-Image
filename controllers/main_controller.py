@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PyQt5.QtCore import QObject
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from controllers.viewer_controller import ViewerController
 from controllers.thumbs_controller import ThumbsController
@@ -46,6 +46,12 @@ class MainController(QObject):
         self.settings_controller.convertRequested.connect(
             self._on_convert_requested
         )
+        self.settings_controller.outputBrowseRequested.connect(
+            self._on_output_browse_requested
+        )
+        self.settings_controller.removeAllRequested.connect(
+            self._on_remove_all
+        )
 
     def _on_thumbnail_selected(self, index, pixmap, mode):
         self.viewer_controller.show_image(pixmap)
@@ -75,15 +81,24 @@ class MainController(QObject):
 
         settings = self.settings_controller.get_settings()
         images = [entry.cv_image for entry in self._original_entries]
+        output_folder = settings["output_folder"] or "cropped"
 
         try:
+            total = len(images)
+            self.settings_controller.start_progress(total)
+
+            def progress_callback(value, total_count):
+                self.settings_controller.update_progress(value, total_count)
+                QApplication.processEvents()
+
             outputs, saved_paths = convert_images(
                 images,
                 threshold=settings["threshold"],
                 aspect_w=settings["aspect_w"],
                 aspect_h=settings["aspect_h"],
                 margin_percent=settings["margin_percent"],
-                output_folder="cropped",
+                output_folder=output_folder,
+                progress_callback=progress_callback,
             )
         except Exception as exc:
             QMessageBox.warning(
@@ -92,6 +107,8 @@ class MainController(QObject):
                 f"Could not convert images: {exc}",
             )
             return
+        finally:
+            self.settings_controller.finish_progress()
 
         if not outputs:
             QMessageBox.warning(
@@ -111,7 +128,10 @@ class MainController(QObject):
 
         self._converted_entries = converted_entries
         self.thumbs_controller.set_converted(
-            [entry.pixmap for entry in self._converted_entries]
+            [
+                (entry.pixmap, self._name_for_entry(entry, i))
+                for i, entry in enumerate(self._converted_entries)
+            ]
         )
         self.thumbs_controller.set_view_mode("converted")
 
@@ -121,28 +141,39 @@ class MainController(QObject):
         if not new_paths:
             return
 
-        entries = load_image_entries(new_paths)
-        if not entries:
+        if self._converted_entries:
+            self._converted_entries = []
+            self.thumbs_controller.set_converted([])
+
+        total = len(new_paths)
+        self.main_widget.start_upload_progress(total)
+        loaded_any = False
+        self.thumbs_controller.set_view_mode("originals")
+
+        for idx, path in enumerate(new_paths, start=1):
+            entries = load_image_entries([path])
+            if entries:
+                entry = entries[0]
+                self._known_paths.add(entry.path)
+                self._original_entries.append(entry)
+                loaded_any = True
+
+                self.thumbs_controller.add_original(
+                    (entry.pixmap, self._name_for_entry(entry, len(self._original_entries) - 1))
+                )
+                self.viewer_controller.show_image(entry.pixmap)
+
+            self.main_widget.update_upload_progress(idx, total)
+            QApplication.processEvents()
+
+        self.main_widget.finish_upload_progress()
+
+        if not loaded_any:
             QMessageBox.information(
                 self.main_widget,
                 "No Images",
                 "None of the selected files could be loaded.",
             )
-            return
-
-        if self._converted_entries:
-            self._converted_entries = []
-            self.thumbs_controller.set_converted([])
-
-        for entry in entries:
-            self._known_paths.add(entry.path)
-        self._original_entries.extend(entries)
-
-        self.thumbs_controller.set_originals(
-            [entry.pixmap for entry in self._original_entries]
-        )
-        self.thumbs_controller.set_view_mode("originals")
-        self.viewer_controller.show_image(entries[-1].pixmap)
 
     def _collect_files(self, paths):
         files = []
@@ -155,3 +186,25 @@ class MainController(QObject):
             elif path.is_file():
                 files.append(str(path))
         return files
+
+    def _name_for_entry(self, entry: ImageEntry, index: int) -> str:
+        if entry.path:
+            return Path(entry.path).name
+        return f"converted_{index + 1:02d}.png"
+
+    def _on_output_browse_requested(self):
+        folder = QFileDialog.getExistingDirectory(
+            self.main_widget,
+            "Select Output Folder",
+            "",
+        )
+        if folder:
+            self.settings_controller.set_output_path(folder)
+
+    def _on_remove_all(self):
+        self._original_entries = []
+        self._converted_entries = []
+        self._known_paths = set()
+        self.thumbs_controller.clear()
+        self.viewer_controller.clear()
+        self.main_widget.finish_upload_progress()

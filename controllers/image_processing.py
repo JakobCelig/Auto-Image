@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -32,6 +32,7 @@ def convert_images(
     aspect_h: int,
     margin_percent: float,
     output_folder: Optional[str] = None,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> Tuple[List[np.ndarray], List[str]]:
     if not images:
         return [], []
@@ -48,6 +49,7 @@ def convert_images(
         aspect_w=aspect_w,
         aspect_h=aspect_h,
         margin_percent=margin_percent,
+        progress_callback=progress_callback,
     )
 
     saved_paths: List[str] = []
@@ -125,6 +127,7 @@ def crop_images_aspect_ratio(
     aspect_w: int = 1,
     aspect_h: int = 1,
     margin_percent: float = 0.20,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> List[np.ndarray]:
     left, right, top, bottom = global_box
 
@@ -166,7 +169,8 @@ def crop_images_aspect_ratio(
     canvas = np.ones((crop_h, crop_w, 4), dtype=np.uint8) * 255
 
     outputs: List[np.ndarray] = []
-    for img in images:
+    total = len(images)
+    for idx, img in enumerate(images, start=1):
         h, w = img.shape[:2]
         canvas[:, :, :] = 255
 
@@ -191,6 +195,8 @@ def crop_images_aspect_ratio(
             + white_bg.astype(np.float32) * (1 - alpha)
         )
         outputs.append(result.astype(np.uint8))
+        if progress_callback:
+            progress_callback(idx, total)
 
     return outputs
 

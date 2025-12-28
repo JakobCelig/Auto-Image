@@ -19,16 +19,22 @@ class ThumbsController(QObject):
         self._originals = []
         self._converted = []
 
-        self.widget.thumbnailClicked.connect(self._handle_thumb_clicked)
+        self.widget.selectionChanged.connect(self._handle_selection_changed)
         self.widget.viewModeChanged.connect(self._handle_mode_changed)
 
-    def set_originals(self, pixmaps):
-        self._originals = list(pixmaps)
+    def set_originals(self, items):
+        self._originals = list(items)
         if self._mode == "originals":
             self.widget.set_thumbnails(self._originals)
 
-    def set_converted(self, pixmaps):
-        self._converted = list(pixmaps)
+    def add_original(self, item):
+        self._originals.append(item)
+        if self._mode == "originals":
+            self.widget.add_thumbnail(item[0], item[1])
+            self.widget.set_selected_index(len(self._originals) - 1, True)
+
+    def set_converted(self, items):
+        self._converted = list(items)
         self.widget.set_converted_enabled(bool(self._converted))
         if self._mode == "converted":
             self.widget.set_thumbnails(self._converted)
@@ -62,12 +68,15 @@ class ThumbsController(QObject):
     def _emit_first_if_any(self):
         current = self._converted if self._mode == "converted" else self._originals
         if current:
-            self.thumbnailSelected.emit(0, current[0], self._mode)
+            self.thumbnailSelected.emit(0, current[0][0], self._mode)
 
     def _handle_thumb_clicked(self, index: int):
         current = self._converted if self._mode == "converted" else self._originals
         if 0 <= index < len(current):
-            self.thumbnailSelected.emit(index, current[index], self._mode)
+            self.thumbnailSelected.emit(index, current[index][0], self._mode)
+
+    def _handle_selection_changed(self, index: int):
+        self._handle_thumb_clicked(index)
 
     def _handle_mode_changed(self, mode: str):
         if mode == self._mode:
