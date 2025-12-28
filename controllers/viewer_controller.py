@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtGui import QPixmap
 
 from widgets.viewer_widget import ViewerWidget
@@ -9,9 +9,14 @@ class ViewerController(QObject):
     Controls only the ViewerWidget.
     Other controllers talk to this one, not directly to the widget.
     """
+    filesDropped = pyqtSignal(list)
+    browseRequested = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.widget = ViewerWidget()
+        self.widget.filesDropped.connect(self.filesDropped)
+        self.widget.browseRequested.connect(self.browseRequested)
 
     # Public API for other controllers
     def show_image(self, pixmap: QPixmap):
