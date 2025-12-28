@@ -123,16 +123,12 @@ class ViewerWidget(QFrame):
         self.title_label.setAlignment(Qt.AlignLeft)
         self.title_label.setObjectName("viewerTitle")
 
-        self.subtitle_label = QLabel("Drop images here or click to browse.")
-        self.subtitle_label.setAlignment(Qt.AlignLeft)
-        self.subtitle_label.setObjectName("viewerSubtitle")
 
         self.drop_area = ImageDropArea()
         self.drop_area.filesDropped.connect(self.filesDropped)
         self.drop_area.browseRequested.connect(self.browseRequested)
 
         layout.addWidget(self.title_label)
-        layout.addWidget(self.subtitle_label)
         layout.addWidget(self.drop_area, stretch=1)
 
     def set_image(self, pixmap: QPixmap):

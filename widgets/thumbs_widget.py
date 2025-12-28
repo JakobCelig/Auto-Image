@@ -140,6 +140,7 @@ class ThumbsWidget(QWidget):
         self.setFocusPolicy(Qt.StrongFocus)
 
         header = QWidget()
+        header.setObjectName("thumbsHeader")
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.setSpacing(8)
@@ -161,6 +162,7 @@ class ThumbsWidget(QWidget):
         header_layout.addStretch(1)
 
         self.scroll = QScrollArea()
+        self.scroll.setObjectName("thumbsScroll")
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QScrollArea.NoFrame)
 

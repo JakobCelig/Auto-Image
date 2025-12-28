@@ -39,13 +39,13 @@ def main():
     QFrame#dropArea {
         background-color: #11161E;
         border: 1px dashed #2B3745;
-        border-radius: 14px;
+        border-radius: 16px;
     }
 
     QFrame#thumbItem {
         background-color: #0F141B;
         border: 1px solid #273241;
-        border-radius: 10px;
+        border-radius: 12px;
     }
 
     QFrame#thumbItem:hover {
@@ -70,10 +70,77 @@ def main():
         color: #6E7A8B;
     }
 
+    QScrollArea#thumbsScroll,
+    QScrollArea#thumbsScroll QWidget#qt_scrollarea_viewport,
+    QScrollArea#thumbsScroll QWidget#qt_scrollarea_viewport > QWidget,
+    QWidget#thumbsHeader {
+        background: transparent;
+        border: none;
+    }
+
+    QAbstractSpinBox {
+        background-color: #2A2F36;
+        border: 1px solid #3A4454;
+        border-bottom: 1px solid #3A4454;
+        border-radius: 14px;
+        padding: 8px 12px;
+        color: #E6EBF2;
+    }
+
+    QAbstractSpinBox:hover {
+        border-color: #495469;
+    }
+
+    QAbstractSpinBox:focus {
+        border: 1px solid #3A4454;
+        border-bottom: 2px solid #5C6BC0;
+        background-color: #2A2F36;
+    }
+
+    QAbstractSpinBox::lineEdit {
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    QLabel#ratioSeparator {
+        color: #A7B0BE;
+    }
+
+    QWidget#aspectRow,
+    QWidget#outputSection,
+    QWidget#outputHeader,
+    QWidget#outputRow {
+        background: transparent;
+        border: none;
+    }
+
+    QLabel#outputPath {
+        color: #D3D8E0;
+        padding: 8px 12px;
+        border: 1px solid #3A4454;
+        border-bottom: 1px solid #3A4454;
+        border-radius: 14px;
+        background-color: #151A23;
+    }
+
+    QToolButton#outputBrowse {
+        background-color: #2A2F36;
+        border: 1px solid #3A4454;
+        border-radius: 14px;
+        padding: 8px 12px;
+        color: #E6EBF2;
+    }
+
+    QToolButton#outputBrowse:hover {
+        background-color: #2E343C;
+        border-bottom: 2px solid #5C6BC0;
+    }
+
     QPushButton#convertButton {
         background-color: #5C6BC0;
         border: 1px solid #5C6BC0;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 8px 12px;
         font-weight: 600;
         color: #F8FAFC;
@@ -87,7 +154,7 @@ def main():
     QPushButton#removeButton {
         background-color: transparent;
         border: 1px solid #4C5AA6;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 8px 12px;
         color: #BFC6F8;
     }
@@ -95,22 +162,6 @@ def main():
     QPushButton#removeButton:hover {
         background-color: #242C4E;
         border-color: #5C6BC0;
-    }
-
-    QLabel#outputPath {
-        color: #B8C1CC;
-        padding: 6px 8px;
-        border: 1px solid #2B3745;
-        border-radius: 8px;
-        background-color: #0F141B;
-    }
-
-    QToolButton#outputBrowse {
-        background-color: #1B2430;
-        border: 1px solid #2B3745;
-        border-radius: 10px;
-        padding: 6px 10px;
-        color: #CDD6E0;
     }
 
     QProgressBar#convertProgress {
@@ -125,6 +176,11 @@ def main():
     QProgressBar#convertProgress::chunk {
         background-color: #2B6CB0;
         border-radius: 12px;
+    }
+
+    QStackedWidget#convertStack {
+        background: transparent;
+        border: none;
     }
 
     QStatusBar#mainStatus {

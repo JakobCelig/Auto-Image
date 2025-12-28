@@ -31,12 +31,19 @@ class MainWidget(QMainWindow):
         left_frame = QFrame()
         left_frame.setObjectName("settingsPanel")
         left_frame.setFrameShape(QFrame.NoFrame)
-        left_frame.setMinimumWidth(240)
-        left_frame.setMaximumWidth(320)
 
         left_layout = QVBoxLayout(left_frame)
         left_layout.setContentsMargins(12, 12, 12, 12)
         left_layout.setSpacing(12)
+
+        left_min_width = max(
+            280,
+            settings_widget.minimumWidth()
+            + left_layout.contentsMargins().left()
+            + left_layout.contentsMargins().right(),
+        )
+        left_frame.setMinimumWidth(left_min_width)
+        left_frame.setMaximumWidth(max(320, left_min_width))
 
         left_title = QLabel("Image Settings")
         left_title.setAlignment(Qt.AlignLeft | Qt.AlignTop)
