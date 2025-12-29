@@ -1,4 +1,7 @@
+import math
+import re
 import sys
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from qt_material import apply_stylesheet
 
@@ -9,8 +12,81 @@ from controllers.thumbs_controller import ThumbsController
 from controllers.settings_controller import SettingsController
 
 
+def _screen_diagonal_inches(screen):
+    if screen is None:
+        return None
+    phys = screen.physicalSize()
+    if phys.width() > 0 and phys.height() > 0:
+        return math.hypot(phys.width(), phys.height()) / 25.4
+    logical_dpi = screen.logicalDotsPerInch()
+    if logical_dpi <= 0:
+        return None
+    size = screen.size()
+    return math.hypot(size.width(), size.height()) / logical_dpi
+
+
+def _scale_bias_for_screen(screen) -> float:
+    diagonal = _screen_diagonal_inches(screen)
+    if diagonal is None:
+        return 1.0
+    if diagonal <= 15.6:
+        return 0.78
+    if diagonal <= 18.0:
+        return 0.85
+    if diagonal <= 21.0:
+        return 0.9
+    return 1.0
+
+
+def _resolve_ui_scale(screen) -> float:
+    if screen is None:
+        return 1.0
+    logical_dpi = screen.logicalDotsPerInch()
+    physical_dpi = screen.physicalDotsPerInch()
+    if logical_dpi <= 0:
+        logical_dpi = 96.0
+    if physical_dpi <= 0:
+        physical_dpi = logical_dpi
+    scale = physical_dpi / logical_dpi
+    scale *= _scale_bias_for_screen(screen)
+    return max(0.9, min(scale, 1.6))
+
+
+def _scale_stylesheet(css: str, scale: float) -> str:
+    if scale == 1.0:
+        return css
+
+    def repl(match):
+        value = float(match.group(1))
+        return f"{int(round(value * scale))}px"
+
+    return re.sub(r"(\d+(?:\.\d+)?)px", repl, css)
+
+
+def _apply_window_size(window, screen):
+    if screen is None:
+        return
+    available = screen.availableGeometry()
+    target_width = int(available.width() * 0.9)
+    target_height = int(available.height() * 0.9)
+    min_size = window.minimumSizeHint()
+    window.resize(
+        max(min_size.width(), target_width),
+        max(min_size.height(), target_height),
+    )
+
+
 def main():
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication(sys.argv)
+    ui_scale = _resolve_ui_scale(app.primaryScreen())
+    app.setProperty("ui_scale", ui_scale)
+    base_font = app.font()
+    base_size = base_font.pointSizeF()
+    if base_size > 0:
+        base_font.setPointSizeF(base_size * ui_scale)
+        app.setFont(base_font)
 
     # Modern dark theme (change name if you prefer another qt-material theme)
     custom_css = """
@@ -202,6 +278,7 @@ def main():
         border-radius: 10px;
     }
     """
+    custom_css = _scale_stylesheet(custom_css, ui_scale)
 
     apply_stylesheet(app, theme='dark_blue.xml')
     app.setStyleSheet(app.styleSheet() + custom_css)
@@ -226,6 +303,7 @@ def main():
         settings_controller=settings_controller,
     )
 
+    _apply_window_size(main_window, app.primaryScreen())
     main_window.show()
     sys.exit(app.exec_())
 

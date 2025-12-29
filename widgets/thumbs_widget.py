@@ -8,18 +8,19 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QFrame,
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QSize, QRectF
+from PyQt5.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent
 from PyQt5.QtGui import QPixmap, QCursor, QPainter, QColor, QPen
+from widgets.ui_scaling import scaled
 
 
 class ToggleSwitch(QCheckBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("thumbsSwitch")
-        self.setFixedSize(46, 24)
+        self.setFixedSize(scaled(46), scaled(24))
         self.setCursor(QCursor(Qt.PointingHandCursor))
         self.setFocusPolicy(Qt.NoFocus)
-        self._margin = 3
+        self._margin = scaled(3)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -37,7 +38,7 @@ class ToggleSwitch(QCheckBox):
             border_color = QColor("#5C6BC0") if checked else QColor("#2B3745")
             knob_color = QColor("#F8FAFC")
 
-        painter.setPen(QPen(border_color, 1))
+        painter.setPen(QPen(border_color, scaled(1)))
         painter.setBrush(track_color)
         painter.drawRoundedRect(rect, rect.height() / 2, rect.height() / 2)
 
@@ -74,8 +75,10 @@ class _ThumbItem(QFrame):
         self.setObjectName("thumbItem")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(6, 6, 6, 6)
-        layout.setSpacing(6)
+        layout.setContentsMargins(
+            scaled(6), scaled(6), scaled(6), scaled(6)
+        )
+        layout.setSpacing(scaled(6))
 
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignCenter)
@@ -91,7 +94,7 @@ class _ThumbItem(QFrame):
         layout.addWidget(self.image_label)
         layout.addWidget(self.name_label)
 
-        self.update_size(QSize(160, 120))
+        self.update_size(QSize(scaled(160), scaled(120)))
 
     def update_size(self, size: QSize):
         self.image_label.setFixedSize(size)
@@ -101,8 +104,8 @@ class _ThumbItem(QFrame):
                     size, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
-        total_height = size.height() + 34
-        self.setFixedSize(size.width() + 12, total_height)
+        total_height = size.height() + scaled(34)
+        self.setFixedSize(size.width() + scaled(12), total_height)
         self.name_label.setFixedWidth(size.width())
         self._apply_name_elide(size.width())
 
@@ -111,10 +114,10 @@ class _ThumbItem(QFrame):
         elided = metrics.elidedText(self._name, Qt.ElideRight, width)
         self.name_label.setText(elided)
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self.rect().contains(event.pos()):
             self.clicked.emit(self.index)
-        super().mousePressEvent(event)
+        super().mouseReleaseEvent(event)
 
 
 class ThumbsWidget(QWidget):
@@ -124,26 +127,27 @@ class ThumbsWidget(QWidget):
 
     selectionChanged = pyqtSignal(int)
     viewModeChanged = pyqtSignal(str)
+    minimumWidthChanged = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("thumbsWidget")
         self._columns = 2
         self._labels = []
-        self._min_thumb_width = 150
+        self._min_thumb_width = scaled(150)
         self._max_columns = 3
         self._selected_index = -1
 
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(0, 0, 0, 0)
-        outer_layout.setSpacing(10)
+        outer_layout.setSpacing(scaled(10))
         self.setFocusPolicy(Qt.StrongFocus)
 
-        header = QWidget()
-        header.setObjectName("thumbsHeader")
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        header_layout.setSpacing(8)
+        self.header = QWidget()
+        self.header.setObjectName("thumbsHeader")
+        self.header_layout = QHBoxLayout(self.header)
+        self.header_layout.setContentsMargins(0, 0, 0, 0)
+        self.header_layout.setSpacing(scaled(8))
 
         self.original_label = QLabel("Originals")
         self.original_label.setObjectName("thumbsModeLabel")
@@ -156,10 +160,10 @@ class ThumbsWidget(QWidget):
         self.converted_label = QLabel("Converted")
         self.converted_label.setObjectName("thumbsModeLabel")
 
-        header_layout.addWidget(self.original_label)
-        header_layout.addWidget(self.mode_switch)
-        header_layout.addWidget(self.converted_label)
-        header_layout.addStretch(1)
+        self.header_layout.addWidget(self.original_label)
+        self.header_layout.addWidget(self.mode_switch)
+        self.header_layout.addWidget(self.converted_label)
+        self.header_layout.addStretch(1)
 
         self.scroll = QScrollArea()
         self.scroll.setObjectName("thumbsScroll")
@@ -168,20 +172,50 @@ class ThumbsWidget(QWidget):
 
         self.inner = QWidget()
         self.grid = QGridLayout(self.inner)
-        self.grid.setContentsMargins(6, 6, 6, 6)
-        self.grid.setSpacing(8)
+        self.grid.setContentsMargins(
+            scaled(6), scaled(6), scaled(6), scaled(6)
+        )
+        self.grid.setSpacing(scaled(8))
         self.grid.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
         self.scroll.setWidget(self.inner)
 
-        outer_layout.addWidget(header)
+        outer_layout.addWidget(self.header)
         outer_layout.addWidget(self.scroll, stretch=1)
+        self._update_minimum_width()
 
     def set_view_mode(self, mode: str):
         if mode == "converted" and self.mode_switch.isEnabled():
             self.mode_switch.setChecked(True)
         else:
             self.mode_switch.setChecked(False)
+
+    def _update_minimum_width(self):
+        spacing = self.header_layout.spacing()
+        margins = self.header_layout.contentsMargins()
+        original_width = self.original_label.sizeHint().width()
+        converted_width = self.converted_label.sizeHint().width()
+        self.original_label.setMinimumWidth(original_width)
+        self.converted_label.setMinimumWidth(converted_width)
+        extra = scaled(12)
+        header_width = (
+            original_width
+            + self.mode_switch.sizeHint().width()
+            + converted_width
+            + spacing * 3
+            + margins.left()
+            + margins.right()
+            + extra
+        )
+        new_min_width = max(scaled(160), header_width)
+        if new_min_width != self.minimumWidth():
+            self.setMinimumWidth(new_min_width)
+            self.minimumWidthChanged.emit(new_min_width)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in (QEvent.FontChange, QEvent.StyleChange):
+            self._update_minimum_width()
 
     def set_converted_enabled(self, enabled: bool):
         self.mode_switch.setEnabled(enabled)
@@ -245,9 +279,11 @@ class ThumbsWidget(QWidget):
             - spacing * (self._columns - 1)
         )
         if available <= 0:
-            size = QSize(140, 105)
+            size = QSize(scaled(140), scaled(105))
         else:
-            width = max(110, int(available / self._columns) - 12)
+            width = max(
+                scaled(110), int(available / self._columns) - scaled(12)
+            )
             height = int(width * 0.75)
             size = QSize(width, height)
         for label in self._labels:
@@ -277,7 +313,7 @@ class ThumbsWidget(QWidget):
         if available <= 0:
             return 1
 
-        min_cell = self._min_thumb_width + 12
+        min_cell = self._min_thumb_width + scaled(12)
         columns = int((available + spacing) / (min_cell + spacing))
         columns = max(1, min(self._max_columns, columns))
         return min(columns, max(1, len(self._labels)))

@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel, QSizePolicy
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QPixmap, QPen, QColor
+from widgets.ui_scaling import scaled
 
 
 class ImageDropArea(QFrame):
@@ -17,7 +18,7 @@ class ImageDropArea(QFrame):
         self.setFrameShape(QFrame.NoFrame)
         self.setAcceptDrops(True)
         self.setCursor(Qt.PointingHandCursor)
-        self.setMinimumSize(360, 260)
+        self.setMinimumSize(scaled(360), scaled(260))
         self.setAttribute(Qt.WA_StyledBackground, True)
 
         size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -83,19 +84,21 @@ class ImageDropArea(QFrame):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        rect = self.contentsRect().adjusted(16, 16, -16, -16)
+        rect = self.contentsRect().adjusted(
+            scaled(16), scaled(16), -scaled(16), -scaled(16)
+        )
         if self._pixmap and not self._pixmap.isNull():
-            scaled = self._pixmap.scaled(
+            scaled_pixmap = self._pixmap.scaled(
                 rect.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
-            x = rect.x() + (rect.width() - scaled.width()) // 2
-            y = rect.y() + (rect.height() - scaled.height()) // 2
-            painter.drawPixmap(x, y, scaled)
+            x = rect.x() + (rect.width() - scaled_pixmap.width()) // 2
+            y = rect.y() + (rect.height() - scaled_pixmap.height()) // 2
+            painter.drawPixmap(x, y, scaled_pixmap)
             return
 
         pen_color = QColor("#7C8797" if not self._drag_active else "#9AD0FF")
-        painter.setPen(QPen(pen_color, 1))
-        painter.drawRoundedRect(rect, 10, 10)
+        painter.setPen(QPen(pen_color, scaled(1)))
+        painter.drawRoundedRect(rect, scaled(10), scaled(10))
 
         painter.setPen(QColor("#B5BDC9"))
         text = "Drop images here\nor click to browse"
@@ -116,8 +119,10 @@ class ViewerWidget(QFrame):
         self.setFrameShape(QFrame.NoFrame)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(
+            scaled(16), scaled(16), scaled(16), scaled(16)
+        )
+        layout.setSpacing(scaled(12))
 
         self.title_label = QLabel("Preview")
         self.title_label.setAlignment(Qt.AlignLeft)
